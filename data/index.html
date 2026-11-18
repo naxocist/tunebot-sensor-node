@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP32 Web Server SPIFFS</title>
+  <style>
+    body { font-family: sans-serif; }
+    .container { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
+    button { font-size: 1.5em; margin: 10px; padding: 10px; background-color: lightgray; cursor: pointer; }
+    button.on { background-color: green; color: white; }
+    input[type=range] { width: 50%; }
+    img { margin-top: 20px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ESP32 SPIFFS Web Server</h1>
+    
+    <!-- Load image from SPIFFS -->
+    <img src="image.jpg" alt="My Image" width="300">
+    <br>
+    
+    <h3>LED1 State Control</h3>
+    <button id="button" onclick="toggleLED()">LED: OFF</button>
+    <br><br>
+    
+    <h3>LED2 Brightness Control</h3>
+    <input type="range" id="trackbar" min="0" max="255" step="1" value="0" oninput="setBrightness()">
+    <br><br>
+
+    <h3>ADC Value Reading</h3>
+    <p style="font-size: 1.5em; font-weight: bold; color: blue;" id="adc_val">Value: 0</p>
+  </div>
+
+  <script>
+    var ledState = false;
+    var button = document.getElementById('button');
+    var trackbar = document.getElementById('trackbar');
+
+    function toggleLED() {
+      ledState = !ledState;
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/led?state=' + (ledState ? '1' : '0'), true);
+      xhr.send();
+      button.innerHTML = 'LED: ' + (ledState ? 'ON' : 'OFF');
+      button.classList.toggle('on', ledState);
+    }
+
+    function setBrightness() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/brightness?value=' + trackbar.value, true);
+      xhr.send();
+    }
+
+    function getADC() {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("adc_val").innerHTML = "Value: " + this.responseText;
+        }
+      };
+      xhr.open('GET', '/adc', true);
+      xhr.send();
+    }
+    
+    setInterval(getADC, 2000); 
+  </script>
+</body>
+</html>
